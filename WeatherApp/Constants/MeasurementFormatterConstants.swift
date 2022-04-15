@@ -10,5 +10,11 @@ import Foundation
 
 enum MeasurementFormatterConstants {
 
-  static let temperature = MeasurementFormatter()
+  static let temperature: MeasurementFormatter = {
+    let formatter = MeasurementFormatter()
+    let numberFormatter = NumberFormatter()
+    numberFormatter.allowsFloats = false
+    formatter.numberFormatter = numberFormatter
+    return formatter
+  }()
 }

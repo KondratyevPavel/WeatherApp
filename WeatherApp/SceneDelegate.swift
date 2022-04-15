@@ -17,7 +17,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     let window = UIWindow(windowScene: scene)
     self.window = window
-    window.rootViewController = WeatherOverviewViewCoordinator.build(injector: Injector())
+    let viewController = WeatherOverviewViewCoordinator.build(injector: Injector())
+    window.rootViewController = viewController
     window.makeKeyAndVisible()
   }
 }

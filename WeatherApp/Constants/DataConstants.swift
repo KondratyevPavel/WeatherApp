@@ -10,5 +10,11 @@ import Foundation
 
 enum DataConstants {
 
-  static let weatherDaysCount = 7
+  static let daysPerWeek = 7
+  static let hoursPerDay = 24
+  static let minutesPerHour = 60
+  static let secondsPerMinute = 60
+  static let secondsPerHour = secondsPerMinute * minutesPerHour
+  static let secondsPerDay = secondsPerHour * hoursPerDay
+  static let hoursPerWeek = hoursPerDay * daysPerWeek
 }

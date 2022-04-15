@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21C5039b" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="DayWeatherEntity" representedClassName=".DayWeatherEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="maxTemperatureC" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="minTemperatureC" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="timestamp" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="weatherTypeRaw" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="location" maxCount="1" deletionRule="Nullify" destinationEntity="WeatherLocationEntity" inverseName="dailyWeather" inverseEntity="WeatherLocationEntity"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="timestamp"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="HourWeatherEntity" representedClassName=".HourWeatherEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="temperatureC" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="timestamp" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="weatherTypeRaw" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="location" maxCount="1" deletionRule="Nullify" destinationEntity="WeatherLocationEntity" inverseName="hourlyWeather" inverseEntity="WeatherLocationEntity"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="timestamp"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="WeatherLocationEntity" representedClassName=".WeatherLocationEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="dailyWeather" toMany="YES" deletionRule="Cascade" destinationEntity="DayWeatherEntity" inverseName="location" inverseEntity="DayWeatherEntity"/>
+        <relationship name="hourlyWeather" toMany="YES" deletionRule="Cascade" destinationEntity="HourWeatherEntity" inverseName="location" inverseEntity="HourWeatherEntity"/>
+    </entity>
+    <elements>
+        <element name="DayWeatherEntity" positionX="-63" positionY="-18" width="128" height="104"/>
+        <element name="HourWeatherEntity" positionX="155.890625" positionY="-62.16015625" width="128" height="89"/>
+        <element name="WeatherLocationEntity" positionX="164.140625" positionY="209.609375" width="128" height="89"/>
+    </elements>
+</model>

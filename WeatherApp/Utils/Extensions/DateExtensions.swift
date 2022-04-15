@@ -24,4 +24,11 @@ extension Date {
     let components = calendar.dateComponents([.year, .month, .day], from: self)
     return calendar.date(from: components)!
   }
+
+  func getMidnightTimestamp(in timezone: TimeZone) -> Int {
+    return Int(
+      clamping: getMidnight(in: timezone).timeIntervalSince1970,
+      rule: .toNearestOrAwayFromZero
+    )
+  }
 }

@@ -9,20 +9,28 @@ import Foundation
 
 
 protocol WeatherOverviewViewModelDelegate {
+
+  func openWeatherDetails(with context: HourlyWeatherContext)
 }
 
 
 class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, ListenableSupport, DailyWeatherDataListener {
 
-  private let injector: DailyWeatherDataManagerProvider
+  typealias Injector = DailyWeatherDataManagerProvider
+
+  private let injector: Injector
   private let coordinator: WeatherOverviewViewModelDelegate
   private let dailyWeatherDataManager: DailyWeatherDataManagerProtocol
   var listeners: Set<AnyWeakHashedWrapper> = []
 
-  init(injector: DailyWeatherDataManagerProvider, coordinator: WeatherOverviewViewModelDelegate) {
+  init(injector: Injector, coordinator: WeatherOverviewViewModelDelegate) {
     self.injector = injector
     self.coordinator = coordinator
-    self.dailyWeatherDataManager = injector.getDailyWeatherDataManager(context: WeatherDataContext(location: WeatherLocation(latitude: 52.5235, longitude: 13.4115), timezone: .current))
+    let context = DailyWeatherContext(
+      location: WeatherLocation(latitude: 52.5235, longitude: 13.4115),
+      timezone: .current
+    )
+    self.dailyWeatherDataManager = injector.getDailyWeatherDataManager(context: context)
 
     dailyWeatherDataManager.addListener(self)
   }
@@ -33,6 +41,11 @@ class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, Listenabl
 
   func refetchDataIfNeeded() {
     dailyWeatherDataManager.refetchDataIfNeeded()
+  }
+
+  func openDay(index: Int) {
+    let hourlyContext = dailyWeatherDataManager.getHourlyWeatherContext(index: index)
+    coordinator.openWeatherDetails(with: hourlyContext)
   }
 
   // MARK: - DailyWeatherDataListener

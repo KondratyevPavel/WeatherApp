@@ -12,7 +12,6 @@ enum ViewFactory {
 
   static func makeVerticalSeparator(width: CGFloat? = nil, color: UIColor? = nil) -> UIView {
     let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
     view.backgroundColor = color ?? .systemGray
     view.widthAnchor.constraint(equalToConstant: width ?? LayoutConstants.px1).isActive = true
     return view
