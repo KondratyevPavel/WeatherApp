@@ -42,7 +42,8 @@ class Injector: DailyWeatherDataManagerProvider, HourlyWeatherDataManagerProvide
   init() {
     self.serverAPIManager = ServerAPIManager()
     self.storageManager = StorageManager()
-    
+
+    self.storageManager.clearOldData()
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(applicationWillEnterForeground),

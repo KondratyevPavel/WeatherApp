@@ -12,5 +12,5 @@ struct HourlyWeatherContext: Hashable {
 
   var location: WeatherLocation
   var timezone: TimeZone
-  var initialTimestamp: Int
+  var timestamp: Int
 }

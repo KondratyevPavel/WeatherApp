@@ -11,11 +11,13 @@ import CoreData
 
 protocol StorageManagerProtocol {
 
-  func getDailyWeather(context: DailyWeatherContext, completion: @escaping ([DayWeather?]) -> Void)
+  func getDailyWeather(location: WeatherLocation, timestamps: [Int], completion: @escaping ([DayWeather]) -> Void)
   func saveDailyWeather(location: WeatherLocation, dailyWeather: [DayWeather])
 
-  func getHourlyWeather(context: HourlyWeatherContext, completion: @escaping ([HourWeather?]) -> Void)
+  func getHourlyWeather(location: WeatherLocation, timestamps: [Int], completion: @escaping ([HourWeather]) -> Void)
   func saveHourlyWeather(location: WeatherLocation, hourlyWeather: [HourWeather])
+
+  func clearOldData()
 }
 
 
@@ -45,27 +47,33 @@ class StorageManager: StorageManagerProtocol {
 
   // MARK: - StorageManagerProtocol
 
-  func getDailyWeather(context: DailyWeatherContext, completion: @escaping ([DayWeather?]) -> Void) {
-    self.context.perform { [self] in
+  func getDailyWeather(location: WeatherLocation, timestamps: [Int], completion: @escaping ([DayWeather]) -> Void) {
+    context.perform { [self] in
+      defer { context.reset() }
+
       let request = DayWeatherEntity.fetchRequest()
-      let initialTimestamp = Date().getMidnightTimestamp(in: context.timezone)
-      let timestamps = (0..<DataConstants.daysPerWeek).map { initialTimestamp + $0 * DataConstants.secondsPerDay }
+      request.returnsObjectsAsFaults = false
+      request.fetchLimit = timestamps.count
       request.predicate = NSPredicate(
         format: "location.latitude == %lf && location.longitude == %lf && timestamp in %@",
-        context.location.latitude,
-        context.location.longitude,
+        location.latitude,
+        location.longitude,
         timestamps
       )
-      request.fetchLimit = timestamps.count
-      let entities = (try? self.context.fetch(request)) ?? []
-      let entitiesRegistry = entities.reduce(into: [Int64: DayWeatherEntity](), { $0[$1.timestamp] = $1 })
-      let result = timestamps.map { timestamp in entitiesRegistry[Int64(timestamp)].flatMap { $0.makeModel() }}
+      guard let entities = try? context.fetch(request) else {
+        completion([])
+        return
+      }
+
+      let result = entities.compactMap { $0.makeModel() }
       completion(result)
     }
   }
 
   func saveDailyWeather(location: WeatherLocation, dailyWeather: [DayWeather]) {
     context.perform { [self] in
+      defer { context.reset() }
+
       let locationRequest = WeatherLocationEntity.fetchRequest()
       locationRequest.predicate = NSPredicate(
         format: "latitude == %lf && longitude == %lf",
@@ -75,40 +83,60 @@ class StorageManager: StorageManagerProtocol {
       locationRequest.fetchLimit = 1
       let location = ((try? context.fetch(locationRequest).first)
                       ?? WeatherLocationEntity(context: context, model: location))
-      let dayWeatherRequest = DayWeatherEntity.fetchRequest()
-      dayWeatherRequest.fetchLimit = 1
+
+      let dailyWeatherRequest = DayWeatherEntity.fetchRequest()
+      dailyWeatherRequest.returnsObjectsAsFaults = false
+      dailyWeatherRequest.fetchLimit = dailyWeather.count
+      dailyWeatherRequest.predicate = NSPredicate(
+        format: "location == %@ && timestamp in %@",
+        location,
+        dailyWeather.map { $0.timestamp }
+      )
+      guard let entities = try? context.fetch(dailyWeatherRequest) else { return }
+
+      var entitiesRegistry = entities.makeDictionary { Int($0.timestamp) }
       for dayWeather in dailyWeather {
-        dayWeatherRequest.predicate = NSPredicate(format: "location == %@ && timestamp == %d", location, dayWeather.timestamp)
-        if let entity = try? context.fetch(dayWeatherRequest).first {
+        if let entity = entitiesRegistry[dayWeather.timestamp] {
           entity.update(with: dayWeather)
         } else {
-          _ = DayWeatherEntity(context: context, model: dayWeather, location: location)
+          entitiesRegistry[dayWeather.timestamp] = DayWeatherEntity(
+            context: context,
+            model: dayWeather,
+            location: location
+          )
         }
       }
       try? context.save()
     }
   }
 
-  func getHourlyWeather(context: HourlyWeatherContext, completion: @escaping ([HourWeather?]) -> Void) {
-    self.context.perform { [self] in
+  func getHourlyWeather(location: WeatherLocation, timestamps: [Int], completion: @escaping ([HourWeather]) -> Void) {
+    context.perform { [self] in
+      defer { context.reset() }
+
       let request = HourWeatherEntity.fetchRequest()
-      let timestamps = (0..<DataConstants.hoursPerDay).map { context.initialTimestamp + $0 * DataConstants.secondsPerHour }
+      request.returnsObjectsAsFaults = false
+      request.fetchLimit = timestamps.count
       request.predicate = NSPredicate(
         format: "location.latitude == %lf && location.longitude == %lf && timestamp in %@",
-        context.location.latitude,
-        context.location.longitude,
+        location.latitude,
+        location.longitude,
         timestamps
       )
-      request.fetchLimit = timestamps.count
-      let entities = (try? self.context.fetch(request)) ?? []
-      let entitiesRegistry = entities.reduce(into: [Int64: HourWeatherEntity](), { $0[$1.timestamp] = $1 })
-      let result = timestamps.map { timestamp in entitiesRegistry[Int64(timestamp)].flatMap { $0.makeModel() }}
+      guard let entities = try? context.fetch(request) else {
+        completion([])
+        return
+      }
+
+      let result = entities.compactMap { $0.makeModel() }
       completion(result)
     }
   }
 
   func saveHourlyWeather(location: WeatherLocation, hourlyWeather: [HourWeather]) {
     context.perform { [self] in
+      defer { context.reset() }
+
       let locationRequest = WeatherLocationEntity.fetchRequest()
       locationRequest.predicate = NSPredicate(
         format: "latitude == %lf && longitude == %lf",
@@ -118,17 +146,57 @@ class StorageManager: StorageManagerProtocol {
       locationRequest.fetchLimit = 1
       let location = ((try? context.fetch(locationRequest).first)
                       ?? WeatherLocationEntity(context: context, model: location))
-      let hourWeatherRequest = HourWeatherEntity.fetchRequest()
-      hourWeatherRequest.fetchLimit = 1
+
+      let hourlyWeatherRequest = HourWeatherEntity.fetchRequest()
+      hourlyWeatherRequest.returnsObjectsAsFaults = false
+      hourlyWeatherRequest.fetchLimit = hourlyWeather.count
+      hourlyWeatherRequest.predicate = NSPredicate(
+        format: "location == %@ && timestamp in %@",
+        location,
+        hourlyWeather.map { $0.timestamp }
+      )
+      guard let entities = try? context.fetch(hourlyWeatherRequest) else { return }
+
+      var entitiesRegistry = entities.makeDictionary { Int($0.timestamp) }
       for hourWeather in hourlyWeather {
-        hourWeatherRequest.predicate = NSPredicate(format: "location == %@ && timestamp == %d", location, hourWeather.timestamp)
-        if let entity = try? context.fetch(hourWeatherRequest).first {
+        if let entity = entitiesRegistry[hourWeather.timestamp] {
           entity.update(with: hourWeather)
         } else {
-          _ = HourWeatherEntity(context: context, model: hourWeather, location: location)
+          entitiesRegistry[hourWeather.timestamp] = HourWeatherEntity(
+            context: context,
+            model: hourWeather,
+            location: location
+          )
         }
       }
       try? context.save()
+    }
+  }
+
+  func clearOldData() {
+    context.perform { [self] in
+      defer { context.reset() }
+
+      let timestamp = Date().getMidnightTimestamp(in: TimeZone(secondsFromGMT: DataConstants.minTimezoneOffset)!)
+
+      let dayWeatherRequest = DayWeatherEntity.fetchRequest()
+      dayWeatherRequest.predicate = NSPredicate(format: "timestamp < %d", timestamp)
+      if let entities = try? context.fetch(dayWeatherRequest) {
+        entities.forEach { context.delete($0) }
+      }
+
+      let hourlyWeatherRequest = HourWeatherEntity.fetchRequest()
+      hourlyWeatherRequest.predicate = NSPredicate(format: "timestamp < %d", timestamp)
+      if let entities = try? context.fetch(hourlyWeatherRequest) {
+        entities.forEach { context.delete($0) }
+      }
+
+      try? context.save()
+
+      let weatherLocationsRequest: NSFetchRequest<NSFetchRequestResult> = WeatherLocationEntity.fetchRequest()
+      weatherLocationsRequest.predicate = NSPredicate(format: "dailyWeather.@count == 0 && hourlyWeather.@count == 0")
+      let weatherLocationsDeleteRequest = NSBatchDeleteRequest(fetchRequest: weatherLocationsRequest)
+      _ = try? context.execute(weatherLocationsDeleteRequest)
     }
   }
 }

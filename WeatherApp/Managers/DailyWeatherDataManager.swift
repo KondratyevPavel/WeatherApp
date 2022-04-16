@@ -16,10 +16,12 @@ protocol DailyWeatherDataListener: AnyObject {
 
 protocol DailyWeatherDataManagerProtocol: Listenable {
 
+  var timezone: TimeZone { get }
   /// 7 items
-  var dailyWeather: [DayWeather?] { get }
+  var timestamps: [Int] { get }
+  func getDayWeather(for timestamp: Int) -> DayWeather?
 
-  func getHourlyWeatherContext(index: Int) -> HourlyWeatherContext
+  func getHourlyWeatherContext(for timestamp: Int) -> HourlyWeatherContext
   func refetchDataIfNeeded()
 }
 
@@ -28,18 +30,19 @@ class DailyWeatherDataManager: DailyWeatherDataManagerProtocol, ListenableSuppor
 
   private static let dataFetchMinimumIntervalSec: TimeInterval = 3 * 60 * 60
 
-  private let context: DailyWeatherContext
+  private var context: DailyWeatherContext
   private let serverAPIManager: ServerAPIManagerProtocol
   private let storageManager: StorageManagerProtocol
+  private(set) var timestamps: [Int]  // count must be equal to DataConstants.daysPerWeek
+  private var dailyWeather: [Int: DayWeather] = [:]
   private var lastFetchDate: Date
   var listeners: Set<AnyWeakHashedWrapper> = []
-  private(set) var dailyWeather: [DayWeather?] = Array(repeating: nil, count: DataConstants.daysPerWeek)
-  private(set) var error: Error?
 
   init(context: DailyWeatherContext, serverAPIManager: ServerAPIManagerProtocol, storageManager: StorageManagerProtocol) {
     self.context = context
     self.serverAPIManager = serverAPIManager
     self.storageManager = storageManager
+    self.timestamps = DailyWeatherDataManager.generateWeekTimestamps(in: context.timezone)
     self.lastFetchDate = Date(timeIntervalSinceNow: -DailyWeatherDataManager.dataFetchMinimumIntervalSec)
 
     fetchDataFromStore()
@@ -48,13 +51,18 @@ class DailyWeatherDataManager: DailyWeatherDataManagerProtocol, ListenableSuppor
 
   // MARK: - DailyWeatherDataManagerProtocol
 
-  func getHourlyWeatherContext(index: Int) -> HourlyWeatherContext {
-    let initialTimestamp = dailyWeather.first??.timestamp ?? Date().getMidnightTimestamp(in: context.timezone)
+  var timezone: TimeZone { context.timezone }
+  
+  func getHourlyWeatherContext(for timestamp: Int) -> HourlyWeatherContext {
     return HourlyWeatherContext(
       location: context.location,
       timezone: context.timezone,
-      initialTimestamp: initialTimestamp + index * DataConstants.secondsPerDay
+      timestamp: timestamp
     )
+  }
+
+  func getDayWeather(for timestamp: Int) -> DayWeather? {
+    return dailyWeather[timestamp]
   }
 
   func refetchDataIfNeeded() {
@@ -68,6 +76,12 @@ class DailyWeatherDataManager: DailyWeatherDataManagerProtocol, ListenableSuppor
 // MARK: - Private
 private extension DailyWeatherDataManager {
 
+  static func generateWeekTimestamps(in timezone: TimeZone) -> [Int] {
+    let initialTimestamp = Date().getMidnightTimestamp(in: timezone)
+    let timestamps = (0..<DataConstants.daysPerWeek).map { initialTimestamp + $0 * DataConstants.secondsPerDay }
+    return timestamps
+  }
+
   var needsToRefetchData: Bool {
     let now = Date()
     return (
@@ -77,13 +91,18 @@ private extension DailyWeatherDataManager {
   }
 
   func fetchDataFromStore() {
-    storageManager.getDailyWeather(context: context) { [weak self] dailyWeather in
+    let context = self.context
+    storageManager.getDailyWeather(location: context.location, timestamps: timestamps) { [weak self] dailyWeather in
       DispatchQueue.main.async {
-        guard let self = self else { return }
+        guard
+          let self = self,
+          self.context == context
+        else { return }
 
-        for index in 0..<DataConstants.daysPerWeek {
-          self.dailyWeather[index] = self.dailyWeather[index] ?? dailyWeather[index]
-        }
+        let timestamps = Set(self.timestamps)
+        dailyWeather
+          .filter { timestamps.contains($0.timestamp) && !self.dailyWeather.keys.contains($0.timestamp) }
+          .forEach { self.dailyWeather[$0.timestamp] = $0 }
         self.notifyDailyWeatherChanged()
       }
     }
@@ -91,17 +110,26 @@ private extension DailyWeatherDataManager {
 
   func fetchDataFromServer() {
     lastFetchDate = Date()
+    let context = self.context
 
     serverAPIManager.getDailyData(context: context) { [weak self] result in
       DispatchQueue.main.async {
-        guard let self = self else { return }
+        guard
+          let self = self,
+          self.context == context
+        else { return }
 
         switch result {
         case let .success(dailyWeather):
+          self.timestamps = DailyWeatherDataManager.generateWeekTimestamps(in: self.context.timezone)
+          let timestamps = Set(self.timestamps)
           self.dailyWeather = dailyWeather
+            .filter { timestamps.contains($0.timestamp) }
+            .makeDictionary(\.timestamp)
           self.lastFetchDate = Date()
           self.notifyDailyWeatherChanged()
           self.storageManager.saveDailyWeather(location: self.context.location, dailyWeather: dailyWeather.compactMap { $0 })
+
         case let .failure(error):
           self.lastFetchDate = Date(timeIntervalSinceNow: -DailyWeatherDataManager.dataFetchMinimumIntervalSec)
           print(error)

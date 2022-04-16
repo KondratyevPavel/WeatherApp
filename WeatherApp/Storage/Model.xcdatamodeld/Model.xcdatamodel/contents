@@ -6,6 +6,10 @@
         <attribute name="timestamp" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="weatherTypeRaw" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="location" maxCount="1" deletionRule="Nullify" destinationEntity="WeatherLocationEntity" inverseName="dailyWeather" inverseEntity="WeatherLocationEntity"/>
+        <fetchIndex name="locationTimestamp">
+            <fetchIndexElement property="location" type="Binary" order="ascending"/>
+            <fetchIndexElement property="timestamp" type="Binary" order="ascending"/>
+        </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="timestamp"/>
@@ -17,6 +21,10 @@
         <attribute name="timestamp" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="weatherTypeRaw" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="location" maxCount="1" deletionRule="Nullify" destinationEntity="WeatherLocationEntity" inverseName="hourlyWeather" inverseEntity="WeatherLocationEntity"/>
+        <fetchIndex name="locationTimestamp">
+            <fetchIndexElement property="location" type="Binary" order="ascending"/>
+            <fetchIndexElement property="timestamp" type="Binary" order="ascending"/>
+        </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="timestamp"/>
@@ -28,6 +36,10 @@
         <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <relationship name="dailyWeather" toMany="YES" deletionRule="Cascade" destinationEntity="DayWeatherEntity" inverseName="location" inverseEntity="DayWeatherEntity"/>
         <relationship name="hourlyWeather" toMany="YES" deletionRule="Cascade" destinationEntity="HourWeatherEntity" inverseName="location" inverseEntity="HourWeatherEntity"/>
+        <fetchIndex name="latitudeLongitude">
+            <fetchIndexElement property="latitude" type="Binary" order="ascending"/>
+            <fetchIndexElement property="longitude" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <elements>
         <element name="DayWeatherEntity" positionX="-63" positionY="-18" width="128" height="104"/>

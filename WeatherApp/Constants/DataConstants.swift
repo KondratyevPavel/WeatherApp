@@ -17,4 +17,5 @@ enum DataConstants {
   static let secondsPerHour = secondsPerMinute * minutesPerHour
   static let secondsPerDay = secondsPerHour * hoursPerDay
   static let hoursPerWeek = hoursPerDay * daysPerWeek
+  static let minTimezoneOffset = -12 * secondsPerHour
 }

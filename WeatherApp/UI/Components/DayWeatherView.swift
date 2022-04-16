@@ -10,31 +10,26 @@ import UIKit
 
 protocol DayWeatherView {
 
+  var dateLabel: UILabel { get }
   var iconView: UIImageView { get }
-  var maxTemperatureLabel: UILabel { get }
   var minTemperatureLabel: UILabel { get }
+  var maxTemperatureLabel: UILabel { get }
 }
 
 
 extension DayWeatherView {
 
-  func setup(with dayWeather: DayWeather?) {
+  func setup(with dayWeather: DayWeather?, timestamp: Int, dateFormatter: DateFormatter) {
+    dateLabel.text = dateFormatter.string(from: Date(timeIntervalSince1970: timestamp))
     if let dayWeather = dayWeather {
       iconView.image = dayWeather.weatherType.icon
-      let maxTemperatureMeasurement: Measurement<Unit> = Measurement(
-        value: dayWeather.maxTemperatureC,
-        unit: UnitTemperature.celsius
-      )
-      maxTemperatureLabel.text = MeasurementFormatterConstants.temperature.string(from: maxTemperatureMeasurement)
-      let minTemperatureMeasurement: Measurement<Unit> = Measurement(
-        value: dayWeather.minTemperatureC,
-        unit: UnitTemperature.celsius
-      )
-      minTemperatureLabel.text = MeasurementFormatterConstants.temperature.string(from: minTemperatureMeasurement)
+      let formatter = MeasurementFormatterConstants.temperature
+      minTemperatureLabel.text = formatter.string(temperatureC: dayWeather.minTemperatureC)
+      maxTemperatureLabel.text = formatter.string(temperatureC: dayWeather.maxTemperatureC)
     } else {
       iconView.image = UIImage(systemName: "questionmark")!
-      maxTemperatureLabel.text = "--"
       minTemperatureLabel.text = "--"
+      maxTemperatureLabel.text = "--"
     }
   }
 }

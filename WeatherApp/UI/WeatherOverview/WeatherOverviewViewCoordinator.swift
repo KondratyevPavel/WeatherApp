@@ -6,16 +6,17 @@
 //
 
 import Foundation
+import UIKit
 
 
-class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate {
+class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherDetailsViewCoordinatorDelegate {
 
   typealias ViewModel = WeatherOverviewViewModel
   typealias ViewController = WeatherOverviewViewController
   typealias Injector = DailyWeatherDataManagerProvider & HourlyWeatherDataManagerProvider
 
-  weak var viewController: ViewController?
-  weak var viewModel: ViewModel?
+  private weak var viewController: ViewController?
+  private weak var viewModel: ViewModel?
   private let injector: Injector
 
   private init(injector: Injector) {
@@ -34,8 +35,15 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate {
   // MARK: - WeatherOverviewViewModelDelegate
 
   func openWeatherDetails(with context: HourlyWeatherContext) {
-    let vc = WeatherDetailsViewCoordinator.build(injector: injector, context: context)
-    vc.modalPresentationStyle = .pageSheet
-    viewController?.present(vc, animated: true)
+    let vc = WeatherDetailsViewCoordinator.build(injector: injector, context: context, delegate: self)
+    let nc = UINavigationController(rootViewController: vc)
+    nc.modalPresentationStyle = .pageSheet
+    viewController?.present(nc, animated: true)
+  }
+
+  // MARK: -  WeatherDetailsViewCoordinatorDelegate
+
+  func dismiss(coordinator: WeatherDetailsViewCoordinator) {
+    viewController?.dismiss(animated: true)
   }
 }

@@ -10,30 +10,34 @@ import UIKit
 
 class DayWeatherSmallView: UIView, DayWeatherView {
 
+  let dateLabel = UILabel()
   let iconView = UIImageView()
-  let maxTemperatureLabel = UILabel()
   let minTemperatureLabel = UILabel()
+  let maxTemperatureLabel = UILabel()
 
   init() {
     super.init(frame: .zero)
 
     iconView.contentMode = .scaleAspectFit
     iconView.translatesAutoresizingMaskIntoConstraints = false
+    iconView.setContentCompressionResistancePriority(.defaultHigh - 1, for: .vertical)
+    iconView.setContentHuggingPriority(.defaultLow - 1, for: .vertical)
     addSubview(iconView)
 
-    minTemperatureLabel.font = UIFontConstants.smallDayWeatherLabel
-    minTemperatureLabel.textAlignment = .right
+    minTemperatureLabel.font = UIFontConstants.smallDayTemperature
+    minTemperatureLabel.textAlignment = .center
     minTemperatureLabel.translatesAutoresizingMaskIntoConstraints = false
-    minTemperatureLabel.setContentCompressionResistancePriority(.defaultHigh + 1, for: .vertical)
-    minTemperatureLabel.setContentHuggingPriority(.defaultLow + 1, for: .vertical)
     addSubview(minTemperatureLabel)
 
-    maxTemperatureLabel.font = UIFontConstants.smallDayWeatherLabel
-    maxTemperatureLabel.textAlignment = .right
+    maxTemperatureLabel.font = UIFontConstants.smallDayTemperature
+    maxTemperatureLabel.textAlignment = .center
     maxTemperatureLabel.translatesAutoresizingMaskIntoConstraints = false
-    maxTemperatureLabel.setContentCompressionResistancePriority(.defaultHigh + 1, for: .vertical)
-    maxTemperatureLabel.setContentHuggingPriority(.defaultLow + 1, for: .vertical)
     addSubview(maxTemperatureLabel)
+
+    dateLabel.font = UIFontConstants.smallDayDate
+    dateLabel.textAlignment = .center
+    dateLabel.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(dateLabel)
 
     let iconLeadingConstraint = iconView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor)
     iconLeadingConstraint.priority = .medium
@@ -49,12 +53,14 @@ class DayWeatherSmallView: UIView, DayWeatherView {
       minTemperatureLabel.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
 
       maxTemperatureLabel.topAnchor.constraint(equalTo: minTemperatureLabel.bottomAnchor),
-      maxTemperatureLabel.leadingAnchor.constraint(equalTo: minTemperatureLabel.leadingAnchor),
-      maxTemperatureLabel.widthAnchor.constraint(equalTo: minTemperatureLabel.widthAnchor),
-      maxTemperatureLabel.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor)
-    ])
+      maxTemperatureLabel.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor),
+      maxTemperatureLabel.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
 
-    setup(with: nil)
+      dateLabel.topAnchor.constraint(equalTo: maxTemperatureLabel.bottomAnchor),
+      dateLabel.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor),
+      dateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
+      dateLabel.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor)
+    ])
   }
 
   required init?(coder: NSCoder) {

@@ -15,6 +15,7 @@ enum MeasurementFormatterConstants {
     let numberFormatter = NumberFormatter()
     numberFormatter.allowsFloats = false
     formatter.numberFormatter = numberFormatter
+    formatter.unitOptions = [.temperatureWithoutUnit]
     return formatter
   }()
 }

@@ -17,7 +17,8 @@ protocol HourlyWeatherDataListener: AnyObject {
 protocol HourlyWeatherDataManagerProtocol: Listenable {
 
   /// 24 items
-  var hourlyWeather: [HourWeather?] { get }
+  var timestamps: [Int] { get }
+  func getHourWeather(for timestamp: Int) -> HourWeather?
 
   func refetchDataIfNeeded()
 }
@@ -30,15 +31,21 @@ class HourlyWeatherDataManager: HourlyWeatherDataManagerProtocol, ListenableSupp
   private let context: HourlyWeatherContext
   private let serverAPIManager: ServerAPIManagerProtocol
   private let storageManager: StorageManagerProtocol
+  let timestamps: [Int]
+  private(set) var hourlyWeather: [Int: HourWeather] = [:]
   private var lastFetchDate: Date
   var listeners: Set<AnyWeakHashedWrapper> = []
-  private(set) var hourlyWeather: [HourWeather?] = Array(repeating: nil, count: DataConstants.hoursPerDay)
-  private(set) var error: Error?
 
-  init(context: HourlyWeatherContext, serverAPIManager: ServerAPIManagerProtocol, storageManager: StorageManagerProtocol) {
+  init(
+    context: HourlyWeatherContext,
+    serverAPIManager: ServerAPIManagerProtocol,
+    storageManager: StorageManagerProtocol
+  ) {
     self.context = context
     self.serverAPIManager = serverAPIManager
     self.storageManager = storageManager
+    self.timestamps = (0..<DataConstants.hoursPerDay)
+      .map { context.timestamp + $0 * DataConstants.secondsPerHour}
     self.lastFetchDate = Date(timeIntervalSinceNow: -HourlyWeatherDataManager.dataFetchMinimumIntervalSec)
 
     fetchDataFromStore()
@@ -46,6 +53,10 @@ class HourlyWeatherDataManager: HourlyWeatherDataManagerProtocol, ListenableSupp
   }
 
   // MARK: - HourlyWeatherDataManagerProtocol
+
+  func getHourWeather(for timestamp: Int) -> HourWeather? {
+    return hourlyWeather[timestamp]
+  }
 
   func refetchDataIfNeeded() {
     guard needsToRefetchData else { return }
@@ -59,21 +70,17 @@ class HourlyWeatherDataManager: HourlyWeatherDataManagerProtocol, ListenableSupp
 private extension HourlyWeatherDataManager {
 
   var needsToRefetchData: Bool {
-    let now = Date()
-    return (
-      now.timeIntervalSince(lastFetchDate) >= HourlyWeatherDataManager.dataFetchMinimumIntervalSec
-      || !now.sameDate(as: lastFetchDate, in: context.timezone)
-    )
+    return Date().timeIntervalSince(lastFetchDate) >= HourlyWeatherDataManager.dataFetchMinimumIntervalSec
   }
 
   func fetchDataFromStore() {
-    storageManager.getHourlyWeather(context: context) { [weak self] hourlyWeather in
+    storageManager.getHourlyWeather(location: context.location, timestamps: timestamps) { [weak self] hourlyWeather in
       DispatchQueue.main.async {
         guard let self = self else { return }
 
-        for index in 0..<DataConstants.daysPerWeek {
-          self.hourlyWeather[index] = self.hourlyWeather[index] ?? hourlyWeather[index]
-        }
+        hourlyWeather
+          .filter { !self.hourlyWeather.keys.contains($0.timestamp) }
+          .forEach { self.hourlyWeather[$0.timestamp] = $0 }
         self.notifyHourlyWeatherChanged()
       }
     }
@@ -88,10 +95,16 @@ private extension HourlyWeatherDataManager {
 
         switch result {
         case let .success(hourlyWeather):
+          let timestamps = Set(self.timestamps)
           self.hourlyWeather = hourlyWeather
+            .filter { timestamps.contains($0.timestamp) }
+            .makeDictionary(\.timestamp)
           self.lastFetchDate = Date()
           self.notifyHourlyWeatherChanged()
-          self.storageManager.saveHourlyWeather(location: self.context.location, hourlyWeather: hourlyWeather.compactMap { $0 })
+          self.storageManager.saveHourlyWeather(
+            location: self.context.location,
+            hourlyWeather: hourlyWeather
+          )
         case let .failure(error):
           self.lastFetchDate = Date(timeIntervalSinceNow: -HourlyWeatherDataManager.dataFetchMinimumIntervalSec)
           print(error)

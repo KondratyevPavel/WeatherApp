@@ -54,15 +54,15 @@ class ServerAPIManager: ServerAPIManagerProtocol {
         return
       }
 
-      guard
-        let response = try? DailyDataResponse(jsonData: data, timezone: context.timezone),
-        let dailyWeather = response.makeDailyWeather()
-      else {
+      guard let response = try? DailyDataResponse(jsonData: data, timezone: context.timezone) else {
         completion(.failure(.invalidResponseData))
         return
       }
 
-      completion(.success(dailyWeather))
+      var result = response.makeDailyWeather()
+      result[1].minTemperatureC = -40
+      result[1].maxTemperatureC = -20
+      completion(.success(result))
     }).resume()
   }
 
@@ -88,15 +88,13 @@ class ServerAPIManager: ServerAPIManagerProtocol {
         return
       }
 
-      guard
-        let response = try? HourlyDataResponse(jsonData: data, timezone: context.timezone),
-        let hourlyWeather = response.makeHourlyWeather()
-      else {
+      guard let response = try? HourlyDataResponse(jsonData: data, timezone: context.timezone) else {
         completion(.failure(.invalidResponseData))
         return
       }
 
-      completion(.success(hourlyWeather))
+      let result = response.makeHourlyWeather()
+      completion(.success(result))
     }).resume()
   }
 }
@@ -111,29 +109,24 @@ private extension ServerAPIManager {
 
     init(jsonData: Data, timezone: TimeZone) throws {
       let decoder = JSONDecoder()
-      let dateFormatter = DateFormatter()
-      dateFormatter.timeZone = timezone
-      dateFormatter.dateFormat = "yyyy-MM-dd"
-      decoder.dateDecodingStrategy = .formatted(dateFormatter)
+      decoder.dateDecodingStrategy = .formatted(DateFormatterFactory.makeServerDate(timezone: timezone))
       self = try decoder.decode(DailyDataResponse.self, from: jsonData)
     }
 
-    func makeDailyWeather() -> [DayWeather]? {
-      guard
-        daily.temperature_2m_max.count == DataConstants.daysPerWeek
-          && daily.temperature_2m_min.count == DataConstants.daysPerWeek
-          && daily.weathercode.count == DataConstants.daysPerWeek
-          && daily.time.count == DataConstants.daysPerWeek
-      else { return nil }
-
-      let dailyWeather: [DayWeather] = (0..<DataConstants.daysPerWeek)
-        .map { DayWeather(
-          timestamp: Int(clamping: daily.time[$0].timeIntervalSince1970, rule: .toNearestOrAwayFromZero),
-          minTemperatureC: daily.temperature_2m_min[$0],
-          maxTemperatureC: daily.temperature_2m_max[$0],
-          weatherType: WeatherType(serverValue: daily.weathercode[$0])
-        ) }
-      return dailyWeather
+    func makeDailyWeather() -> [DayWeather] {
+      let daysCount = min(
+        daily.time.count,
+        daily.weathercode.count,
+        daily.temperature_2m_min.count,
+        daily.temperature_2m_max.count
+      )
+      let result = (0..<daysCount).map { DayWeather(
+        timestamp: Int(clamping: daily.time[$0].timeIntervalSince1970, rule: .toNearestOrAwayFromZero),
+        minTemperatureC: daily.temperature_2m_min[$0],
+        maxTemperatureC: daily.temperature_2m_max[$0],
+        weatherType: WeatherType(serverValue: daily.weathercode[$0])
+      ) }
+      return result
     }
 
     struct DailyData: Codable {
@@ -151,15 +144,18 @@ private extension ServerAPIManager {
 
     init(jsonData: Data, timezone: TimeZone) throws {
       let decoder = JSONDecoder()
-      let dateFormatter = DateFormatter()
-      dateFormatter.timeZone = timezone
-      dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
-      decoder.dateDecodingStrategy = .formatted(dateFormatter)
+      decoder.dateDecodingStrategy = .formatted(DateFormatterFactory.makeServerDateTime(timezone: timezone))
       self = try decoder.decode(HourlyDataResponse.self, from: jsonData)
     }
 
-    func makeHourlyWeather() -> [HourWeather]? {
-      return nil
+    func makeHourlyWeather() -> [HourWeather] {
+      let hoursCount = min(hourly.time.count, hourly.weathercode.count, hourly.temperature_2m.count)
+      let result = (0..<hoursCount).map { HourWeather(
+        timestamp: Int(clamping: hourly.time[$0].timeIntervalSince1970, rule: .toNearestOrAwayFromZero),
+        temperatureC: hourly.temperature_2m[$0],
+        weatherType: WeatherType(serverValue: hourly.weathercode[$0])
+      ) }
+      return result
     }
 
     struct HourlyData: Codable {

@@ -37,14 +37,20 @@ class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, Listenabl
 
   // MARK: - WeatherOverviewViewControllerDelegate
 
-  var dailyWeather: [DayWeather?] { dailyWeatherDataManager.dailyWeather }
+  var timestamps: [Int] { dailyWeatherDataManager.timestamps }
+
+  var timezone: TimeZone { dailyWeatherDataManager.timezone }
+
+  func getDayWeather(for timestamp: Int) -> DayWeather? {
+    return dailyWeatherDataManager.getDayWeather(for: timestamp)
+  }
 
   func refetchDataIfNeeded() {
     dailyWeatherDataManager.refetchDataIfNeeded()
   }
 
-  func openDay(index: Int) {
-    let hourlyContext = dailyWeatherDataManager.getHourlyWeatherContext(index: index)
+  func openDay(for timestamp: Int) {
+    let hourlyContext = dailyWeatherDataManager.getHourlyWeatherContext(for: timestamp)
     coordinator.openWeatherDetails(with: hourlyContext)
   }
 
