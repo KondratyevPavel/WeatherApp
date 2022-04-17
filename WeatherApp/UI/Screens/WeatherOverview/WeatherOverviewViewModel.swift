@@ -10,13 +10,14 @@ import Foundation
 
 protocol WeatherOverviewViewModelDelegate {
 
-  func openWeatherDetails(with context: HourlyWeatherContext)
+  func dayPressed(with context: HourlyWeatherContext)
+  func locationPressed(with location: WeatherLocation)
 }
 
 
 class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, ListenableSupport, DailyWeatherDataListener {
 
-  typealias Injector = DailyWeatherDataManagerProvider
+  typealias Injector = DailyWeatherDataManagerProvider & SettingsManagerProvider
 
   private let injector: Injector
   private let coordinator: WeatherOverviewViewModelDelegate
@@ -27,12 +28,17 @@ class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, Listenabl
     self.injector = injector
     self.coordinator = coordinator
     let context = DailyWeatherContext(
-      location: WeatherLocation(latitude: 52.5235, longitude: 13.4115),
+      location: injector.settingsManager.weatherLocation,
       timezone: .current
     )
     self.dailyWeatherDataManager = injector.getDailyWeatherDataManager(context: context)
 
     dailyWeatherDataManager.addListener(self)
+  }
+
+  func setLocation(_ location: WeatherLocation) {
+    injector.settingsManager.setWeatherLocation(location)
+    dailyWeatherDataManager.setLocation(location)
   }
 
   // MARK: - WeatherOverviewViewControllerDelegate
@@ -49,9 +55,13 @@ class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, Listenabl
     dailyWeatherDataManager.refetchDataIfNeeded()
   }
 
-  func openDay(for timestamp: Int) {
+  func dayPressed(with timestamp: Int) {
     let hourlyContext = dailyWeatherDataManager.getHourlyWeatherContext(for: timestamp)
-    coordinator.openWeatherDetails(with: hourlyContext)
+    coordinator.dayPressed(with: hourlyContext)
+  }
+
+  func locationPressed() {
+    coordinator.locationPressed(with: dailyWeatherDataManager.location)
   }
 
   // MARK: - DailyWeatherDataListener

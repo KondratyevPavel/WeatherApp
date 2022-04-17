@@ -59,9 +59,7 @@ class ServerAPIManager: ServerAPIManagerProtocol {
         return
       }
 
-      var result = response.makeDailyWeather()
-      result[1].minTemperatureC = -40
-      result[1].maxTemperatureC = -20
+      let result = response.makeDailyWeather()
       completion(.success(result))
     }).resume()
   }

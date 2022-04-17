@@ -14,5 +14,6 @@ enum LayoutConstants {
   static let cellIconSize = CGSize(width: 32, height: 32)
   static let spacing: CGFloat = 8
   static let smallSpacing: CGFloat = 4
+  static let tapSize: CGFloat = 44
 }
 

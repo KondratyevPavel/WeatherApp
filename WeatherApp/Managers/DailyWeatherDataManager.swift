@@ -16,11 +16,13 @@ protocol DailyWeatherDataListener: AnyObject {
 
 protocol DailyWeatherDataManagerProtocol: Listenable {
 
+  var location: WeatherLocation { get }
   var timezone: TimeZone { get }
   /// 7 items
   var timestamps: [Int] { get }
   func getDayWeather(for timestamp: Int) -> DayWeather?
 
+  func setLocation(_ location: WeatherLocation)
   func getHourlyWeatherContext(for timestamp: Int) -> HourlyWeatherContext
   func refetchDataIfNeeded()
 }
@@ -43,16 +45,21 @@ class DailyWeatherDataManager: DailyWeatherDataManagerProtocol, ListenableSuppor
     self.serverAPIManager = serverAPIManager
     self.storageManager = storageManager
     self.timestamps = DailyWeatherDataManager.generateWeekTimestamps(in: context.timezone)
-    self.lastFetchDate = Date(timeIntervalSinceNow: -DailyWeatherDataManager.dataFetchMinimumIntervalSec)
+    self.lastFetchDate = Date()
 
-    fetchDataFromStore()
-    fetchDataFromServer()
+    reloadData()
   }
 
   // MARK: - DailyWeatherDataManagerProtocol
 
-  var timezone: TimeZone { context.timezone }
+  var location: WeatherLocation { context.location }
   
+  var timezone: TimeZone { context.timezone }
+
+  func getDayWeather(for timestamp: Int) -> DayWeather? {
+    return dailyWeather[timestamp]
+  }
+
   func getHourlyWeatherContext(for timestamp: Int) -> HourlyWeatherContext {
     return HourlyWeatherContext(
       location: context.location,
@@ -61,8 +68,9 @@ class DailyWeatherDataManager: DailyWeatherDataManagerProtocol, ListenableSuppor
     )
   }
 
-  func getDayWeather(for timestamp: Int) -> DayWeather? {
-    return dailyWeather[timestamp]
+  func setLocation(_ location: WeatherLocation) {
+    context.location = location
+    reloadData()
   }
 
   func refetchDataIfNeeded() {
@@ -80,6 +88,15 @@ private extension DailyWeatherDataManager {
     let initialTimestamp = Date().getMidnightTimestamp(in: timezone)
     let timestamps = (0..<DataConstants.daysPerWeek).map { initialTimestamp + $0 * DataConstants.secondsPerDay }
     return timestamps
+  }
+
+  func reloadData() {
+    lastFetchDate = Date(timeIntervalSinceNow: -DailyWeatherDataManager.dataFetchMinimumIntervalSec)
+    dailyWeather = [:]
+    notifyDailyWeatherChanged()
+
+    fetchDataFromStore()
+    fetchDataFromServer()
   }
 
   var needsToRefetchData: Bool {

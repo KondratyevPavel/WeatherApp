@@ -22,7 +22,8 @@ protocol WeatherOverviewViewControllerDelegate: Listenable {
   func getDayWeather(for timestamp: Int) -> DayWeather?
 
   func refetchDataIfNeeded()
-  func openDay(for timestamp: Int)
+  func dayPressed(with timestamp: Int)
+  func locationPressed()
 }
 
 
@@ -50,13 +51,18 @@ class WeatherOverviewViewController: UIViewController, WeatherOverviewViewContro
     view.backgroundColor = .systemBackground
 
     let bottomPanel = createBottomPanel()
-    bottomPanel.translatesAutoresizingMaskIntoConstraints = false
     bottomPanel.preservesSuperviewLayoutMargins = true
+    bottomPanel.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(bottomPanel)
 
     let todayButton = wrapInButton(view: todayView, index: 0, selector: #selector(dayPressed))
+    todayButton.preservesSuperviewLayoutMargins = true
     todayButton.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(todayButton)
+
+    let settingsButton = createSettingsButton()
+    settingsButton.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(settingsButton)
 
     NSLayoutConstraint.activate([
       bottomPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -64,10 +70,15 @@ class WeatherOverviewViewController: UIViewController, WeatherOverviewViewContro
       bottomPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor),
       bottomPanel.safeAreaLayoutGuide.heightAnchor.constraint(equalToConstant: LayoutConstants.bottomPanelHeight),
 
-      todayButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-      todayButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-      todayButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-      todayButton.bottomAnchor.constraint(equalTo: bottomPanel.topAnchor)
+      todayButton.topAnchor.constraint(equalTo: view.topAnchor),
+      todayButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      todayButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      todayButton.bottomAnchor.constraint(equalTo: bottomPanel.topAnchor),
+
+      settingsButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+      settingsButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+      settingsButton.widthAnchor.constraint(equalToConstant: LayoutConstants.tapSize),
+      settingsButton.heightAnchor.constraint(equalToConstant: LayoutConstants.tapSize)
     ])
 
     dailyWeatherChanged()
@@ -106,21 +117,28 @@ private extension WeatherOverviewViewController {
 
   func createBottomPanel() -> UIView {
     let bottomPanel = UIStackView()
-    bottomPanel.isLayoutMarginsRelativeArrangement = true
 
     guard model.timestamps.count > 1 else { return bottomPanel }
 
     for index in 1..<model.timestamps.count {
-      if index > 1 {
+      let notFirstItem = index > 1
+      if notFirstItem {
         let separator = createWrappedSeparator()
         separator.translatesAutoresizingMaskIntoConstraints = false
         bottomPanel.addArrangedSubview(separator)
       }
       let dayButton = wrapInButton(view: futureDayViews[index - 1], index: index, selector: #selector(dayPressed(_:)))
+      dayButton.layoutMargins = UIEdgeInsets(
+        top: LayoutConstants.spacing,
+        left: LayoutConstants.smallSpacing,
+        bottom: LayoutConstants.spacing,
+        right: LayoutConstants.smallSpacing
+      )
+      dayButton.preservesSuperviewLayoutMargins = true
       dayButton.translatesAutoresizingMaskIntoConstraints = false
       bottomPanel.addArrangedSubview(dayButton)
-      if index > 1 {
-        futureDayViews[index - 1].widthAnchor.constraint(equalTo: futureDayViews[index - 2].widthAnchor).isActive = true
+      if notFirstItem {
+        dayButton.layoutMarginsGuide.widthAnchor.constraint(equalTo: bottomPanel.arrangedSubviews.reversed()[2].layoutMarginsGuide.widthAnchor).isActive = true
       }
     }
 
@@ -135,16 +153,7 @@ private extension WeatherOverviewViewController {
   func createFutureDayViews() -> [DayWeatherSmallView] {
     guard model.timestamps.count > 1 else { return [] }
 
-    let futureDayViews: [DayWeatherSmallView] = (1..<model.timestamps.count).map { _ in
-      let view = DayWeatherSmallView()
-      view.layoutMargins = UIEdgeInsets(
-        top: LayoutConstants.spacing,
-        left: 0,
-        bottom: LayoutConstants.spacing,
-        right: 0
-      )
-      return view
-    }
+    let futureDayViews = (1..<model.timestamps.count).map { _ in DayWeatherSmallView() }
     return futureDayViews
   }
 
@@ -164,10 +173,27 @@ private extension WeatherOverviewViewController {
     return wrapper
   }
 
+  func createSettingsButton() -> UIButton {
+    let button = UIButton(type: .system)
+    button.setImage(UIImage(systemName: "gear")!, for: .normal)
+    button.menu = UIMenu(
+      title: "Settings",
+      children: [
+        UIAction(title: "Location", image: UIImage(systemName: "location")!, handler: { [weak self] _ in
+          self?.model.locationPressed()
+        })
+      ]
+    )
+    button.showsMenuAsPrimaryAction = true
+    return button
+  }
+
   func wrapInButton(view: UIView, index: Int, selector: Selector) -> UIButton {
     let button = UIButton()
     button.tag = index
     button.addTarget(self, action: selector, for: .touchUpInside)
+    view.preservesSuperviewLayoutMargins = true
+    view.layoutMargins = .zero
     view.translatesAutoresizingMaskIntoConstraints = false
     view.isUserInteractionEnabled = false
     button.addSubview(view)
@@ -186,7 +212,7 @@ private extension WeatherOverviewViewController {
   func dayPressed(_ sender: UIButton) {
     guard sender.tag >= 0 && sender.tag < model.timestamps.count else { return }
 
-    model.openDay(for: model.timestamps[sender.tag])
+    model.dayPressed(with: model.timestamps[sender.tag])
   }
 }
 

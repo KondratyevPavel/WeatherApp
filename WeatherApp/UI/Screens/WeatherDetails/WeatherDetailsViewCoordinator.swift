@@ -13,6 +13,7 @@ protocol WeatherDetailsViewCoordinatorDelegate: AnyObject {
   func dismiss(coordinator: WeatherDetailsViewCoordinator)
 }
 
+
 class WeatherDetailsViewCoordinator: WeatherDetailsViewModelDelegate {
 
   typealias ViewModel = WeatherDetailsViewModel

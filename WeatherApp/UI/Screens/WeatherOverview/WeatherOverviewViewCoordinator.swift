@@ -5,15 +5,14 @@
 //  Created by Pavel Kondratyev on 14.04.22.
 //
 
-import Foundation
 import UIKit
 
 
-class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherDetailsViewCoordinatorDelegate {
+class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherDetailsViewCoordinatorDelegate, LocationViewCoordinatorDelegate {
 
   typealias ViewModel = WeatherOverviewViewModel
   typealias ViewController = WeatherOverviewViewController
-  typealias Injector = DailyWeatherDataManagerProvider & HourlyWeatherDataManagerProvider
+  typealias Injector = DailyWeatherDataManagerProvider & HourlyWeatherDataManagerProvider & SettingsManagerProvider
 
   private weak var viewController: ViewController?
   private weak var viewModel: ViewModel?
@@ -34,10 +33,18 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherD
 
   // MARK: - WeatherOverviewViewModelDelegate
 
-  func openWeatherDetails(with context: HourlyWeatherContext) {
+  func dayPressed(with context: HourlyWeatherContext) {
     let vc = WeatherDetailsViewCoordinator.build(injector: injector, context: context, delegate: self)
     let nc = UINavigationController(rootViewController: vc)
     nc.modalPresentationStyle = .pageSheet
+    viewController?.present(nc, animated: true)
+  }
+
+  func locationPressed(with location: WeatherLocation) {
+    let vc = LocationViewCoordinator.build(location: location, delegate: self)
+    let nc = UINavigationController(rootViewController: vc)
+    nc.modalPresentationStyle = .pageSheet
+    nc.presentationController?.delegate = vc
     viewController?.present(nc, animated: true)
   }
 
@@ -45,5 +52,20 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherD
 
   func dismiss(coordinator: WeatherDetailsViewCoordinator) {
     viewController?.dismiss(animated: true)
+  }
+
+  // MARK: - LocationViewCoordinatorDelegate
+
+  func dismiss(coordinator: LocationViewCoordinator) {
+    viewController?.dismiss(animated: true)
+  }
+
+  func dismiss(coordinator: LocationViewCoordinator, withSelectedLocation location: WeatherLocation) {
+    saveLocation(location, coordinator: coordinator)
+    dismiss(coordinator: coordinator)
+  }
+
+  func saveLocation(_ location: WeatherLocation, coordinator: LocationViewCoordinator) {
+    viewModel?.setLocation(location)
   }
 }

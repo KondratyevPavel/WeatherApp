@@ -32,17 +32,25 @@ protocol StorageManagerProvider {
 }
 
 
-class Injector: DailyWeatherDataManagerProvider, HourlyWeatherDataManagerProvider, ServerAPIManagerProvider, StorageManagerProvider {
+protocol SettingsManagerProvider {
+
+  var settingsManager: SettingsManagerProtocol { get }
+}
+
+
+class Injector: DailyWeatherDataManagerProvider, HourlyWeatherDataManagerProvider, ServerAPIManagerProvider, StorageManagerProvider, SettingsManagerProvider {
 
   let serverAPIManager: ServerAPIManagerProtocol
   let storageManager: StorageManagerProtocol
+  let settingsManager: SettingsManagerProtocol
   private var dailyWeatherDataManagers: [DailyWeatherContext: WeakWrapper<DailyWeatherDataManager>] = [:]
   private var hourlyWeatherDataManagers: [HourlyWeatherContext: WeakWrapper<HourlyWeatherDataManager>] = [:]
 
   init() {
     self.serverAPIManager = ServerAPIManager()
     self.storageManager = StorageManager()
-
+    self.settingsManager = SettingsManager()
+    
     self.storageManager.clearOldData()
     NotificationCenter.default.addObserver(
       self,
