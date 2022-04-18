@@ -182,10 +182,15 @@ private class Cell: UITableViewCell {
     bottomConstraint.priority = .medium - 1
     let iconBottomConstraint = iconView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
     iconBottomConstraint.priority = .required - 1
+    let timeBottomConstraint = timeLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
+    timeBottomConstraint.priority = .required - 1
+    let temperatureBottomConstraint = temperatureLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
+    temperatureBottomConstraint.priority = .required - 1
+
     NSLayoutConstraint.activate([
       timeLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
       timeLabel.topAnchor.constraint(greaterThanOrEqualTo: contentView.layoutMarginsGuide.topAnchor),
-      timeLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor),
+      timeBottomConstraint,
       timeLabel.centerYAnchor.constraint(equalTo: temperatureLabel.centerYAnchor),
 
       iconView.leadingAnchor.constraint(equalTo: timeLabel.trailingAnchor, constant: LayoutConstants.spacing),
@@ -200,7 +205,7 @@ private class Cell: UITableViewCell {
       temperatureLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
       temperatureLabel.firstBaselineAnchor.constraint(equalTo: iconView.firstBaselineAnchor),
       temperatureLabel.topAnchor.constraint(greaterThanOrEqualTo: contentView.layoutMarginsGuide.topAnchor),
-      temperatureLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
+      temperatureBottomConstraint
     ])
   }
 

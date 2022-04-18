@@ -11,7 +11,7 @@ import CoreGraphics
 enum FontSizeConstants {
 
   static let hugeMain: CGFloat = 54
-  static let hugeDetail: CGFloat = 40
+  static let hugeDetail: CGFloat = 36
   static let main: CGFloat = 17
   static let detail: CGFloat = 14
 }

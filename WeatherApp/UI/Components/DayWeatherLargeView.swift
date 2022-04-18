@@ -8,62 +8,42 @@
 import UIKit
 
 
-class DayWeatherLargeView: UIView, DayWeatherView {
+class DayWeatherLargeView: UIView {
 
   let dateLabel = UILabel()
   let iconView = UIImageView()
-  let minTemperatureLabel = UILabel()
-  let maxTemperatureLabel = UILabel()
+  let temperatureLabel = UILabel()
 
   init() {
     super.init(frame: .zero)
 
-    iconView.contentMode = .scaleAspectFit
-    iconView.translatesAutoresizingMaskIntoConstraints = false
-    iconView.setContentCompressionResistancePriority(.defaultHigh - 1, for: .vertical)
-    iconView.setContentHuggingPriority(.defaultLow - 1, for: .vertical)
-    addSubview(iconView)
-
-    minTemperatureLabel.font = UIFontConstants.largeDayTemperature
-    minTemperatureLabel.textAlignment = .center
-    minTemperatureLabel.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(minTemperatureLabel)
-
-    maxTemperatureLabel.font = UIFontConstants.largeDayTemperature
-    maxTemperatureLabel.textAlignment = .center
-    maxTemperatureLabel.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(maxTemperatureLabel)
-    
     dateLabel.font = UIFontConstants.largeDayDate
-    dateLabel.textAlignment = .center
-    dateLabel.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(dateLabel)
 
-    let iconLeadingConstraint = iconView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor)
-    iconLeadingConstraint.priority = .medium
+    temperatureLabel.font = UIFontConstants.largeDayTemperature
 
-    NSLayoutConstraint.activate([
-      iconView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor),
-      iconView.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor),
-      iconView.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
-      iconLeadingConstraint,
-
-      minTemperatureLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor),
-      minTemperatureLabel.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor),
-      minTemperatureLabel.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
-
-      maxTemperatureLabel.topAnchor.constraint(equalTo: minTemperatureLabel.bottomAnchor),
-      maxTemperatureLabel.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor),
-      maxTemperatureLabel.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
-
-      dateLabel.topAnchor.constraint(equalTo: maxTemperatureLabel.bottomAnchor),
-      dateLabel.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor),
-      dateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
-      dateLabel.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor)
-    ])
+    LayoutFactory.makeLabelIconLabelVertical(
+      in: self,
+      topLabel: dateLabel,
+      iconView: iconView,
+      bottomLabel: temperatureLabel
+    )
   }
   
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  func setup(with dayWeather: DayWeather?, timestamp: Int, dateFormatter: DateFormatter) {
+    dateLabel.text = dateFormatter.string(from: Date(timeIntervalSince1970: timestamp))
+    if let dayWeather = dayWeather {
+      iconView.image = dayWeather.weatherType.icon
+      let formatter = MeasurementFormatterConstants.temperature
+      let minTemperature = formatter.string(temperatureC: dayWeather.minTemperatureC)
+      let maxTemperature = formatter.string(temperatureC: dayWeather.maxTemperatureC)
+      temperatureLabel.text = "\(minTemperature)/\(maxTemperature)"
+    } else {
+      iconView.image = UIImage(systemName: "questionmark")!
+      temperatureLabel.text = "--/--"
+    }
   }
 }

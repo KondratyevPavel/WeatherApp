@@ -68,7 +68,7 @@ class WeatherOverviewViewController: UIViewController, WeatherOverviewViewContro
       bottomPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
       bottomPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       bottomPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-      bottomPanel.safeAreaLayoutGuide.heightAnchor.constraint(equalToConstant: LayoutConstants.bottomPanelHeight),
+      bottomPanel.layoutMarginsGuide.heightAnchor.constraint(equalToConstant: LayoutConstants.bottomPanelHeight),
 
       todayButton.topAnchor.constraint(equalTo: view.topAnchor),
       todayButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -117,13 +117,20 @@ private extension WeatherOverviewViewController {
 
   func createBottomPanel() -> UIView {
     let bottomPanel = UIStackView()
+    bottomPanel.layoutMargins = UIEdgeInsets(
+      top: LayoutConstants.spacing,
+      left: LayoutConstants.spacing,
+      bottom: LayoutConstants.spacing,
+      right: LayoutConstants.spacing
+    )
 
     guard model.timestamps.count > 1 else { return bottomPanel }
 
     for index in 1..<model.timestamps.count {
-      let notFirstItem = index > 1
-      if notFirstItem {
+      let isFirstItem = index == 1
+      if !isFirstItem {
         let separator = createWrappedSeparator()
+        separator.preservesSuperviewLayoutMargins = true
         separator.translatesAutoresizingMaskIntoConstraints = false
         bottomPanel.addArrangedSubview(separator)
       }
@@ -137,8 +144,10 @@ private extension WeatherOverviewViewController {
       dayButton.preservesSuperviewLayoutMargins = true
       dayButton.translatesAutoresizingMaskIntoConstraints = false
       bottomPanel.addArrangedSubview(dayButton)
-      if notFirstItem {
-        dayButton.layoutMarginsGuide.widthAnchor.constraint(equalTo: bottomPanel.arrangedSubviews.reversed()[2].layoutMarginsGuide.widthAnchor).isActive = true
+      if !isFirstItem {
+        let prevButton = bottomPanel.arrangedSubviews.reversed()[2]
+        dayButton.layoutMarginsGuide.widthAnchor.constraint(equalTo: prevButton.layoutMarginsGuide.widthAnchor)
+          .isActive = true
       }
     }
 
