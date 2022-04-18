@@ -45,6 +45,7 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherD
     let nc = UINavigationController(rootViewController: vc)
     nc.modalPresentationStyle = .pageSheet
     nc.presentationController?.delegate = vc
+    nc.navigationBar.scrollEdgeAppearance = nc.navigationBar.standardAppearance
     viewController?.present(nc, animated: true)
   }
 

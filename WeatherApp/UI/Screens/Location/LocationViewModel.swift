@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreLocation
 
 
 protocol LocationViewModelDelegate {
@@ -16,10 +17,12 @@ protocol LocationViewModelDelegate {
 }
 
 
-class LocationViewModel: LocationViewControllerDelegate {
+class LocationViewModel: NSObject, LocationViewControllerDelegate, CLLocationManagerDelegate {
 
   private let coordinator: LocationViewModelDelegate
   private(set) var location: WeatherLocation
+  private var completion: ((Result<CLLocationCoordinate2D, Error>) -> Void)?
+  private lazy var locationManager = createLocationManager()
 
   init(coordinator: LocationViewModelDelegate, location: WeatherLocation) {
     self.coordinator = coordinator
@@ -32,6 +35,17 @@ class LocationViewModel: LocationViewControllerDelegate {
     self.location = location
   }
 
+  func getCurrentLocation(completion: @escaping (Result<CLLocationCoordinate2D, Error>) -> Void) {
+    self.completion = completion
+
+    switch locationManager.authorizationStatus {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+    default:
+      locationManager.requestLocation()
+    }
+  }
+
   func cancelPressed() {
     coordinator.cancelPressed()
   }
@@ -42,5 +56,43 @@ class LocationViewModel: LocationViewControllerDelegate {
 
   func saveLocation() {
     coordinator.saveLocation(location)
+  }
+
+  // MARK: - CLLocationManagerDelegate
+
+  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    switch manager.authorizationStatus {
+    case .authorizedAlways,
+        .authorizedWhenInUse:
+      manager.requestLocation()
+    case .denied,
+        .restricted:
+      completion = nil
+    default:
+      break
+    }
+  }
+
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let location = locations.last else { return }
+
+    completion?(.success(location.coordinate))
+    completion = nil
+  }
+
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    completion?(.failure(error))
+    completion = nil
+  }
+}
+
+
+// MARK: - Private
+private extension LocationViewModel {
+
+  func createLocationManager() -> CLLocationManager {
+    let locationManager = CLLocationManager()
+    locationManager.delegate = self
+    return locationManager
   }
 }

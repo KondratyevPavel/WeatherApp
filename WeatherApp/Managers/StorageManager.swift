@@ -242,7 +242,8 @@ class StorageManager: StorageManagerProtocol {
     context.perform { [self] in
       defer { context.reset() }
 
-      let timestamp = Date().getMidnightTimestamp(in: TimeZone(secondsFromGMT: DataConstants.minTimezoneOffset)!)
+      let minTimezone = TimeZone(secondsFromGMT: DataConstants.minTimezoneOffset)!
+      let timestamp = Date().getMidnightTimestamp(in: minTimezone) - DataConstants.secondsPerDay
 
       let daylyWeatherRequest = DayWeatherEntity.fetchRequest()
       daylyWeatherRequest.predicate = NSPredicate(format: "timestamp < %d", timestamp)
