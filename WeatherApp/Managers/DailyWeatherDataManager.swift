@@ -30,8 +30,6 @@ protocol DailyWeatherDataManagerProtocol: Listenable {
 
 class DailyWeatherDataManager: DailyWeatherDataManagerProtocol, ListenableSupport {
 
-  private static let dataFetchMinimumIntervalSec: TimeInterval = 3 * 60 * 60
-
   private var context: DailyWeatherContext
   private let serverAPIManager: ServerAPIManagerProtocol
   private let storageManager: StorageManagerProtocol
@@ -91,25 +89,24 @@ private extension DailyWeatherDataManager {
   }
 
   func reloadData() {
-    lastFetchDate = Date(timeIntervalSinceNow: -DailyWeatherDataManager.dataFetchMinimumIntervalSec)
+    lastFetchDate = Date()
     dailyWeather = [:]
     notifyDailyWeatherChanged()
 
     fetchDataFromStore()
-    fetchDataFromServer()
   }
 
   var needsToRefetchData: Bool {
     let now = Date()
     return (
-      now.timeIntervalSince(lastFetchDate) >= DailyWeatherDataManager.dataFetchMinimumIntervalSec
+      now.timeIntervalSince(lastFetchDate) >= DataConstants.fetchInterval
       || !now.sameDate(as: lastFetchDate, in: context.timezone)
     )
   }
 
   func fetchDataFromStore() {
     let context = self.context
-    storageManager.getDailyWeather(location: context.location, timestamps: timestamps) { [weak self] dailyWeather in
+    storageManager.getDailyWeather(location: context.location, timestamps: timestamps) { [weak self] dailyWeather, fetchDate in
       DispatchQueue.main.async {
         guard
           let self = self,
@@ -120,7 +117,9 @@ private extension DailyWeatherDataManager {
         dailyWeather
           .filter { timestamps.contains($0.timestamp) && !self.dailyWeather.keys.contains($0.timestamp) }
           .forEach { self.dailyWeather[$0.timestamp] = $0 }
+        self.lastFetchDate = fetchDate
         self.notifyDailyWeatherChanged()
+        self.refetchDataIfNeeded()
       }
     }
   }
@@ -145,10 +144,14 @@ private extension DailyWeatherDataManager {
             .makeDictionary(\.timestamp)
           self.lastFetchDate = Date()
           self.notifyDailyWeatherChanged()
-          self.storageManager.saveDailyWeather(location: self.context.location, dailyWeather: dailyWeather.compactMap { $0 })
+          self.storageManager.saveDailyWeather(
+            location: self.context.location,
+            dailyWeather: dailyWeather.compactMap { $0 },
+            fetchDate: self.lastFetchDate
+          )
 
         case let .failure(error):
-          self.lastFetchDate = Date(timeIntervalSinceNow: -DailyWeatherDataManager.dataFetchMinimumIntervalSec)
+          self.lastFetchDate = Date(timeIntervalSinceNow: -DataConstants.fetchInterval)
           print(error)
         }
       }

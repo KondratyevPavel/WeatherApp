@@ -12,6 +12,7 @@
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
+                <constraint value="location"/>
                 <constraint value="timestamp"/>
             </uniquenessConstraint>
         </uniquenessConstraints>
@@ -27,11 +28,14 @@
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
+                <constraint value="location"/>
                 <constraint value="timestamp"/>
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
     <entity name="WeatherLocationEntity" representedClassName=".WeatherLocationEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="dailyWeatherTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="hourlyWeatherTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <relationship name="dailyWeather" toMany="YES" deletionRule="Cascade" destinationEntity="DayWeatherEntity" inverseName="location" inverseEntity="DayWeatherEntity"/>
@@ -44,6 +48,6 @@
     <elements>
         <element name="DayWeatherEntity" positionX="-63" positionY="-18" width="128" height="104"/>
         <element name="HourWeatherEntity" positionX="155.890625" positionY="-62.16015625" width="128" height="89"/>
-        <element name="WeatherLocationEntity" positionX="164.140625" positionY="209.609375" width="128" height="89"/>
+        <element name="WeatherLocationEntity" positionX="164.140625" positionY="209.609375" width="128" height="119"/>
     </elements>
 </model>

@@ -26,8 +26,6 @@ protocol HourlyWeatherDataManagerProtocol: Listenable {
 
 class HourlyWeatherDataManager: HourlyWeatherDataManagerProtocol, ListenableSupport {
 
-  private static let dataFetchMinimumIntervalSec: TimeInterval = 3 * 60 * 60
-
   private let context: HourlyWeatherContext
   private let serverAPIManager: ServerAPIManagerProtocol
   private let storageManager: StorageManagerProtocol
@@ -46,10 +44,9 @@ class HourlyWeatherDataManager: HourlyWeatherDataManagerProtocol, ListenableSupp
     self.storageManager = storageManager
     self.timestamps = (0..<DataConstants.hoursPerDay)
       .map { context.timestamp + $0 * DataConstants.secondsPerHour}
-    self.lastFetchDate = Date(timeIntervalSinceNow: -HourlyWeatherDataManager.dataFetchMinimumIntervalSec)
+    self.lastFetchDate = Date()
 
     fetchDataFromStore()
-    fetchDataFromServer()
   }
 
   // MARK: - HourlyWeatherDataManagerProtocol
@@ -70,18 +67,20 @@ class HourlyWeatherDataManager: HourlyWeatherDataManagerProtocol, ListenableSupp
 private extension HourlyWeatherDataManager {
 
   var needsToRefetchData: Bool {
-    return Date().timeIntervalSince(lastFetchDate) >= HourlyWeatherDataManager.dataFetchMinimumIntervalSec
+    return Date().timeIntervalSince(lastFetchDate) >= DataConstants.fetchInterval
   }
 
   func fetchDataFromStore() {
-    storageManager.getHourlyWeather(location: context.location, timestamps: timestamps) { [weak self] hourlyWeather in
+    storageManager.getHourlyWeather(location: context.location, timestamps: timestamps) { [weak self] hourlyWeather, fetchDate in
       DispatchQueue.main.async {
         guard let self = self else { return }
 
         hourlyWeather
           .filter { !self.hourlyWeather.keys.contains($0.timestamp) }
           .forEach { self.hourlyWeather[$0.timestamp] = $0 }
+        self.lastFetchDate = fetchDate
         self.notifyHourlyWeatherChanged()
+        self.refetchDataIfNeeded()
       }
     }
   }
@@ -103,10 +102,11 @@ private extension HourlyWeatherDataManager {
           self.notifyHourlyWeatherChanged()
           self.storageManager.saveHourlyWeather(
             location: self.context.location,
-            hourlyWeather: hourlyWeather
+            hourlyWeather: hourlyWeather,
+            fetchDate: self.lastFetchDate
           )
         case let .failure(error):
-          self.lastFetchDate = Date(timeIntervalSinceNow: -HourlyWeatherDataManager.dataFetchMinimumIntervalSec)
+          self.lastFetchDate = Date(timeIntervalSinceNow: -DataConstants.fetchInterval)
           print(error)
         }
       }
