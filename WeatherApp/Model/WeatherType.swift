@@ -11,6 +11,14 @@ import Foundation
 enum WeatherType: Int {
   case
   clear,
+  semiCloudy,
   cloudy,
-  rain
+  fog,
+  drizzle,
+  lightRain,
+  rain,
+  heavyRain,
+  snow,
+  rainBolt,
+  hail
 }

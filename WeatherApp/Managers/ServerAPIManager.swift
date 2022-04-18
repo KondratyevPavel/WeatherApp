@@ -172,10 +172,32 @@ private extension WeatherType {
     switch serverValue {
     case 0, 1:
       self = .clear
-    case 2, 3, 45, 48:
+    case 2:
+      self = .semiCloudy
+    case 3:
       self = .cloudy
-    default:
+    case 45, 48:
+      self = .fog
+    case 51, 52, 53, 56, 57:
+      self = .drizzle
+    case 61:
+      self = .lightRain
+    case 63, 66:
       self = .rain
+    case 65, 67:
+      self = .heavyRain
+    case 71, 73, 75, 77:
+      self = .snow
+    case 80, 81, 82:
+      self = .rain
+    case 85, 86:
+      self = .snow
+    case 95:
+      self = .rainBolt
+    case 96, 99:
+      self = .hail
+    default:
+      self = .clear
     }
   }
 }
