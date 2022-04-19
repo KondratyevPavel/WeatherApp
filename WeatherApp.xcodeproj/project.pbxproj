@@ -59,6 +59,7 @@
 		72D7AF00280EBC3C00F8806E /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D7AEFF280EBC3C00F8806E /* AboutViewController.swift */; };
 		72D7AF02280EBC4400F8806E /* AboutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D7AF01280EBC4400F8806E /* AboutViewModel.swift */; };
 		72D7AF04280EBC4F00F8806E /* AboutViewCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D7AF03280EBC4F00F8806E /* AboutViewCoordinator.swift */; };
+		72D7AF06280ECC7E00F8806E /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D7AF05280ECC7E00F8806E /* CustomNavigationController.swift */; };
 		72F0A856280868D700972059 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F0A855280868D700972059 /* AppDelegate.swift */; };
 		72F0A858280868D700972059 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F0A857280868D700972059 /* SceneDelegate.swift */; };
 		72F0A85A280868D700972059 /* WeatherOverviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F0A859280868D700972059 /* WeatherOverviewViewController.swift */; };
@@ -121,6 +122,7 @@
 		72D7AEFF280EBC3C00F8806E /* AboutViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
 		72D7AF01280EBC4400F8806E /* AboutViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViewModel.swift; sourceTree = "<group>"; };
 		72D7AF03280EBC4F00F8806E /* AboutViewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViewCoordinator.swift; sourceTree = "<group>"; };
+		72D7AF05280ECC7E00F8806E /* CustomNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationController.swift; sourceTree = "<group>"; };
 		72F0A852280868D700972059 /* WeatherApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeatherApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		72F0A855280868D700972059 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		72F0A857280868D700972059 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -222,6 +224,7 @@
 			children = (
 				72769F0A2808C16E00F02C78 /* DayWeatherSmallView.swift */,
 				72769F0C2808C18400F02C78 /* DayWeatherLargeView.swift */,
+				72D7AF05280ECC7E00F8806E /* CustomNavigationController.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -442,6 +445,7 @@
 				72769F0B2808C16E00F02C78 /* DayWeatherSmallView.swift in Sources */,
 				72D7AE6B2809E99000F8806E /* WeatherDetailsViewController.swift in Sources */,
 				72F0A85A280868D700972059 /* WeatherOverviewViewController.swift in Sources */,
+				72D7AF06280ECC7E00F8806E /* CustomNavigationController.swift in Sources */,
 				72F0A856280868D700972059 /* AppDelegate.swift in Sources */,
 				72769EEE2808835F00F02C78 /* UIntExtensions.swift in Sources */,
 				72769F162808C53000F02C78 /* MeasurementFormatterConstants.swift in Sources */,

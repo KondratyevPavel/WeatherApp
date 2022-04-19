@@ -35,25 +35,22 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherD
 
   func dayPressed(with context: HourlyWeatherContext) {
     let vc = WeatherDetailsViewCoordinator.build(injector: injector, context: context, delegate: self)
-    let nc = UINavigationController(rootViewController: vc)
+    let nc = CustomNavigationController(rootViewController: vc)
     nc.modalPresentationStyle = .pageSheet
     viewController?.present(nc, animated: true)
   }
 
   func locationPressed(with location: WeatherLocation) {
     let vc = LocationViewCoordinator.build(location: location, delegate: self)
-    let nc = UINavigationController(rootViewController: vc)
+    let nc = CustomNavigationController(rootViewController: vc)
     nc.modalPresentationStyle = .pageSheet
-    nc.presentationController?.delegate = vc
-    nc.navigationBar.scrollEdgeAppearance = nc.navigationBar.standardAppearance
     viewController?.present(nc, animated: true)
   }
 
   func aboutPressed() {
     let vc = AboutViewCoordinator.build(delegate: self)
-    let nc = UINavigationController(rootViewController: vc)
+    let nc = CustomNavigationController(rootViewController: vc)
     nc.modalPresentationStyle = .pageSheet
-    nc.navigationBar.scrollEdgeAppearance = nc.navigationBar.standardAppearance
     viewController?.present(nc, animated: true)
   }
 
