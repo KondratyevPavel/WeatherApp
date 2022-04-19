@@ -28,14 +28,17 @@ protocol ServerAPIManagerProtocol {
 
 class ServerAPIManager: ServerAPIManagerProtocol {
 
+  private static let host = "api.open-meteo.com"
+  private static let scheme = "https"
+
   private let session = URLSession(configuration: .default)
 
   // MARK: - ServerAPIManagerProtocol
 
   func getDailyData(context: DailyWeatherContext, completion: @escaping (Result<[DayWeather], ServerAPIManagerError>) -> Void) {
     var requestComponents = URLComponents()
-    requestComponents.host = "api.open-meteo.com"
-    requestComponents.scheme = "https"
+    requestComponents.host = ServerAPIManager.host
+    requestComponents.scheme = ServerAPIManager.scheme
     requestComponents.path = "/v1/forecast"
     requestComponents.queryItems = [
       URLQueryItem(name: "latitude", value: "\(context.location.latitude)"),
@@ -66,8 +69,8 @@ class ServerAPIManager: ServerAPIManagerProtocol {
 
   func getHourlyData(context: HourlyWeatherContext, completion: @escaping (Result<[HourWeather], ServerAPIManagerError>) -> Void) {
     var requestComponents = URLComponents()
-    requestComponents.host = "api.open-meteo.com"
-    requestComponents.scheme = "https"
+    requestComponents.host = ServerAPIManager.host
+    requestComponents.scheme = ServerAPIManager.scheme
     requestComponents.path = "/v1/forecast"
     requestComponents.queryItems = [
       URLQueryItem(name: "latitude", value: "\(context.location.latitude)"),

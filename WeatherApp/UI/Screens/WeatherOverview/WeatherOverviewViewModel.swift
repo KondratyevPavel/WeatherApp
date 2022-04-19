@@ -12,6 +12,7 @@ protocol WeatherOverviewViewModelDelegate {
 
   func dayPressed(with context: HourlyWeatherContext)
   func locationPressed(with location: WeatherLocation)
+  func aboutPressed()
 }
 
 
@@ -62,6 +63,10 @@ class WeatherOverviewViewModel: WeatherOverviewViewControllerDelegate, Listenabl
 
   func locationPressed() {
     coordinator.locationPressed(with: dailyWeatherDataManager.location)
+  }
+
+  func aboutPressed() {
+    coordinator.aboutPressed()
   }
 
   // MARK: - DailyWeatherDataListener

@@ -8,7 +8,7 @@
 import UIKit
 
 
-class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherDetailsViewCoordinatorDelegate, LocationViewCoordinatorDelegate {
+class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherDetailsViewCoordinatorDelegate, LocationViewCoordinatorDelegate, AboutViewCoordinatorDelegate {
 
   typealias ViewModel = WeatherOverviewViewModel
   typealias ViewController = WeatherOverviewViewController
@@ -49,6 +49,14 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherD
     viewController?.present(nc, animated: true)
   }
 
+  func aboutPressed() {
+    let vc = AboutViewCoordinator.build(delegate: self)
+    let nc = UINavigationController(rootViewController: vc)
+    nc.modalPresentationStyle = .pageSheet
+    nc.navigationBar.scrollEdgeAppearance = nc.navigationBar.standardAppearance
+    viewController?.present(nc, animated: true)
+  }
+
   // MARK: -  WeatherDetailsViewCoordinatorDelegate
 
   func dismiss(coordinator: WeatherDetailsViewCoordinator) {
@@ -68,5 +76,11 @@ class WeatherOverviewViewCoordinator: WeatherOverviewViewModelDelegate, WeatherD
 
   func saveLocation(_ location: WeatherLocation, coordinator: LocationViewCoordinator) {
     viewModel?.setLocation(location)
+  }
+
+  // MARK: - AboutViewCoordinatorDelegate
+
+  func dismiss(coordinator: AboutViewCoordinator) {
+    viewController?.dismiss(animated: true)
   }
 }

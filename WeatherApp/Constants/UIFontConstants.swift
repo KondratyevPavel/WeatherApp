@@ -10,6 +10,7 @@ import UIKit
 
 enum UIFontConstants {
 
+  static let main: UIFont = .systemFont(ofSize: FontSizeConstants.main)
   static let largeDayTemperature: UIFont = .systemFont(ofSize: FontSizeConstants.hugeMain)
   static let largeDayDate: UIFont = .systemFont(ofSize: FontSizeConstants.hugeDetail)
   static let smallDayTemperature: UIFont = .systemFont(ofSize: FontSizeConstants.main)

@@ -24,6 +24,7 @@ protocol WeatherOverviewViewControllerDelegate: Listenable {
   func refetchDataIfNeeded()
   func dayPressed(with timestamp: Int)
   func locationPressed()
+  func aboutPressed()
 }
 
 
@@ -190,6 +191,9 @@ private extension WeatherOverviewViewController {
       children: [
         UIAction(title: "Location", image: UIImage(systemName: "location")!, handler: { [weak self] _ in
           self?.model.locationPressed()
+        }),
+        UIAction(title: "About", image: UIImage(systemName: "questionmark.circle")!, handler: { [weak self] _ in
+          self?.model.aboutPressed()
         })
       ]
     )
