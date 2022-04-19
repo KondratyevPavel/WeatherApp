@@ -185,6 +185,7 @@ private extension WeatherOverviewViewController {
 
   func createSettingsButton() -> UIButton {
     let button = UIButton(type: .system)
+    button.contentHorizontalAlignment = .trailing
     button.setImage(UIImage(systemName: "gear")!, for: .normal)
     button.menu = UIMenu(
       title: "Settings",

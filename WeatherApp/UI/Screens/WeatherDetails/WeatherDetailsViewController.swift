@@ -176,15 +176,17 @@ private class Cell: UITableViewCell {
     temperatureLabel.translatesAutoresizingMaskIntoConstraints = false
     contentView.addSubview(temperatureLabel)
 
+    let bottomConstraint = iconView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor)
+    bottomConstraint.priority = .required - 1
     NSLayoutConstraint.activate([
       timeLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-      timeLabel.centerYAnchor.constraint(equalTo: temperatureLabel.centerYAnchor),
+      timeLabel.firstBaselineAnchor.constraint(equalTo: temperatureLabel.firstBaselineAnchor),
 
       iconView.leadingAnchor.constraint(equalTo: timeLabel.trailingAnchor, constant: LayoutConstants.spacing),
       iconView.widthAnchor.constraint(equalToConstant: LayoutConstants.cellIconSize.width),
       iconView.heightAnchor.constraint(equalToConstant: LayoutConstants.cellIconSize.height),
-      iconView.topAnchor.constraint(greaterThanOrEqualTo: contentView.layoutMarginsGuide.topAnchor),
-      iconView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor),
+      iconView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+      bottomConstraint,
 
       temperatureLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: LayoutConstants.spacing),
       temperatureLabel.firstBaselineAnchor.constraint(equalTo: iconView.firstBaselineAnchor),
